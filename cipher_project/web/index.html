@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Classical Ciphers</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Công cụ mã hóa cổ điển</h2>
+        <label for="cipher">Chọn thuật toán:</label><br>
+        <select id="cipher" onchange="updateKeyFields()">
+            <option value="caesar">Caesar</option>
+            <option value="affine">Affine</option>
+            <option value="transposition">Hoán Vị (Columnar)</option>
+            <option value="vigenere">Vigenère</option>
+            <option value="playfair">Playfair</option>
+        </select><br>
+        <p id="key-instruction"></p>
+        <label for="text">Văn bản:</label><br>
+        <input type="text" id="text" placeholder="Nhập văn bản"><br>
+        <div id="key-fields">
+            <label for="key">Khóa:</label><br>
+            <input type="text" id="key" placeholder="Nhập khóa"><br>
+        </div>
+        <button onclick="encrypt()">Mã hóa</button>
+        <button onclick="decrypt()">Giải mã</button><br>
+        <p id="result"></p>
+        <p id="error"></p>
+    </div>
+    <script src="caesar.js"></script>
+    <script src="affine.js"></script>
+    <script src="transposition.js"></script>
+    <script src="vigenere.js"></script>
+    <script src="playfair.js"></script>
+    <script>
+        function updateKeyFields() {
+            const cipher = document.getElementById('cipher').value;
+            const keyFields = document.getElementById('key-fields');
+            const instruction = document.getElementById('key-instruction');
+            keyFields.innerHTML = '';
+            if (cipher === 'affine') {
+                instruction.innerText = 'Khóa: Hai số a,b (a nguyên tố cùng 26, ví dụ: 5,8)';
+                keyFields.innerHTML = `
+                    <label for="key-a">a:</label><br>
+                    <input type="number" id="key-a" placeholder="Nhập a" value="5"><br>
+                    <label for="key-b">b:</label><br>
+                    <input type="number" id="key-b" placeholder="Nhập b" value="8"><br>
+                `;
+            } else {
+                let instructionText = '';
+                if (cipher === 'caesar') instructionText = 'Khóa: Một số (ví dụ: 3)';
+                else if (cipher === 'transposition') instructionText = 'Khóa: Hoán vị số (ví dụ: 3142)';
+                else if (cipher === 'vigenere') instructionText = 'Khóa: Chuỗi chữ cái (ví dụ: KEY)';
+                else if (cipher === 'playfair') instructionText = 'Khóa: Chuỗi chữ cái (ví dụ: PLAYFAIR, J coi như I)';
+                instruction.innerText = instructionText;
+                keyFields.innerHTML = `
+                    <label for="key">Khóa:</label><br>
+                    <input type="text" id="key" placeholder="Nhập khóa"><br>
+                `;
+            }
+        }
+
+        function encrypt() {
+            const cipher = document.getElementById('cipher').value;
+            const text = document.getElementById('text').value;
+            let key;
+            if (cipher === 'affine') {
+                key = [document.getElementById('key-a').value, document.getElementById('key-b').value];
+            } else {
+                key = document.getElementById('key').value;
+            }
+            document.getElementById('error').innerText = '';
+            document.getElementById('result').innerText = '';
+            try {
+                let result;
+                if (cipher === 'caesar') result = caesarShift(text, key);
+                else if (cipher === 'affine') result = affineShift(text, key);
+                else if (cipher === 'transposition') result = transpositionEncrypt(text, key);
+                else if (cipher === 'vigenere') result = vigenereShift(text, key);
+                else if (cipher === 'playfair') result = new Playfair(key).encrypt(text);
+                document.getElementById('result').innerText = result ? 'Mã hóa: ' + result : '';
+            } catch (e) {
+                document.getElementById('error').innerText = e.message;
+            }
+        }
+
+        function decrypt() {
+            const cipher = document.getElementById('cipher').value;
+            const text = document.getElementById('text').value;
+            let key;
+            if (cipher === 'affine') {
+                key = [document.getElementById('key-a').value, document.getElementById('key-b').value];
+            } else {
+                key = document.getElementById('key').value;
+            }
+            document.getElementById('error').innerText = '';
+            document.getElementById('result').innerText = '';
+            try {
+                let result;
+                if (cipher === 'caesar') result = caesarShift(text, key, false);
+                else if (cipher === 'affine') result = affineShift(text, key, false);
+                else if (cipher === 'transposition') result = transpositionDecrypt(text, key);
+                else if (cipher === 'vigenere') result = vigenereShift(text, key, false);
+                else if (cipher === 'playfair') result = new Playfair(key).decrypt(text);
+                document.getElementById('result').innerText = result ? 'Giải mã: ' + result : '';
+            } catch (e) {
+                document.getElementById('error').innerText = e.message;
+            }
+        }
+
+        // Initialize key fields on page load
+        updateKeyFields();
+    </script>
+</body>
+</html>
